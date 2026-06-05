@@ -18,7 +18,7 @@ export function IconDetail({ icon }: IconDetailProps) {
     <div className="panel detail-panel">
       <h2>{icon.name}</h2>
       <p className="muted">
-        {icon.category} · size {icon.size} · {icon.variant ?? 'default'}
+        {icon.category} · available sizes {icon.sizesAvailable.join(', ')} · {icon.variant ?? 'default'}
       </p>
       <p>{icon.description ?? 'No description generated yet.'}</p>
       {icon.tags?.length ? (
@@ -26,6 +26,11 @@ export function IconDetail({ icon }: IconDetailProps) {
           <strong>Tags:</strong> {icon.tags.join(', ')}
         </p>
       ) : null}
+      <p>
+        <a href={icon.previewUrl ?? '#'}>Open preview link</a>
+        {' · '}
+        <a href={icon.svgUrl ?? iconSvgUrl(icon.id)}>Open raw SVG</a>
+      </p>
       <div className="detail-preview">
         {icon.sizesAvailable.map((size) => {
           const id = `${size}/${icon.category}/${icon.name}`;

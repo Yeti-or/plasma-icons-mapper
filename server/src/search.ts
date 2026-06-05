@@ -1,5 +1,5 @@
-import type { IconRecord, IconSize, SearchResultItem } from '@plasma-icons-mapper/shared';
-import { DEFAULT_ICON_SIZE } from '@plasma-icons-mapper/shared';
+import type { IconRecord, SearchResultItem } from '@plasma-icons-mapper/shared';
+import { pickRepresentativeIcon } from './utils/icon-id.js';
 import { normalizeQuery, tokenizeQuery } from './utils/tokenize.js';
 
 function toSearchResult(icon: IconRecord, score: number): SearchResultItem {
@@ -74,26 +74,27 @@ function scoreDescriptionMatch(icon: IconRecord, query: string): number {
   return Math.min(score, 1);
 }
 
-export function searchByName(
-  icons: IconRecord[],
-  query: string,
-  size: IconSize = DEFAULT_ICON_SIZE,
-): SearchResultItem[] {
-  const filtered = icons.filter((icon) => icon.size === size);
-  return filtered
+function getRepresentativeIcons(icons: IconRecord[]): IconRecord[] {
+  const logicalKeys = new Set(icons.map((icon) => icon.logicalId));
+  return [...logicalKeys]
+    .map((logicalId) => {
+      const icon = icons.find((candidate) => candidate.logicalId === logicalId);
+      if (!icon) return undefined;
+      return pickRepresentativeIcon(icons, icon.category, icon.name);
+    })
+    .filter((icon): icon is IconRecord => Boolean(icon));
+}
+
+export function searchByName(icons: IconRecord[], query: string): SearchResultItem[] {
+  return getRepresentativeIcons(icons)
     .map((icon) => ({ icon, score: scoreNameMatch(icon, query) }))
     .filter(({ score }) => score > 0.2)
     .sort((a, b) => b.score - a.score || a.icon.name.localeCompare(b.icon.name))
     .map(({ icon, score }) => toSearchResult(icon, Number(score.toFixed(4))));
 }
 
-export function searchByDescription(
-  icons: IconRecord[],
-  query: string,
-  size: IconSize = DEFAULT_ICON_SIZE,
-): SearchResultItem[] {
-  const filtered = icons.filter((icon) => icon.size === size);
-  return filtered
+export function searchByDescription(icons: IconRecord[], query: string): SearchResultItem[] {
+  return getRepresentativeIcons(icons)
     .map((icon) => ({ icon, score: scoreDescriptionMatch(icon, query) }))
     .filter(({ score }) => score > 0.15)
     .sort((a, b) => b.score - a.score || a.icon.name.localeCompare(b.icon.name))

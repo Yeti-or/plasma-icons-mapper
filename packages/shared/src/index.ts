@@ -56,12 +56,13 @@ export interface SearchResultItem {
   description?: string;
   tags?: string[];
   score: number;
+  svgUrl?: string;
+  previewUrl?: string;
 }
 
 export interface SearchResponse {
   query: string;
   mode: 'name' | 'description';
-  size: IconSize;
   results: SearchResultItem[];
 }
 

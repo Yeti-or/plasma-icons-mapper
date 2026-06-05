@@ -52,37 +52,37 @@ const sampleIcons: IconRecord[] = [
 
 describe('search', () => {
   it('finds icons by exact and partial name', () => {
-    const exact = searchByName(sampleIcons, 'HeartCircleFill', 24);
+    const exact = searchByName(sampleIcons, 'HeartCircleFill');
     expect(exact[0]?.name).toBe('HeartCircleFill');
     expect(exact[0]?.score).toBeGreaterThan(0.9);
 
-    const partial = searchByName(sampleIcons, 'heart circle', 24);
+    const partial = searchByName(sampleIcons, 'heart circle');
     expect(partial[0]?.name).toBe('HeartCircleFill');
   });
 
-  it('defaults to size 24 results only', () => {
+  it('returns one representative result per logical icon', () => {
     const results = searchByName(sampleIcons, 'HeartCircleFill');
     expect(results).toHaveLength(1);
     expect(results[0]?.size).toBe(24);
+    expect(results[0]?.sizesAvailable).toEqual([16, 24, 36]);
   });
 
   it('returns category in description search results', () => {
-    const results = searchByDescription(sampleIcons, 'icon inside circle', 24);
+    const results = searchByDescription(sampleIcons, 'icon inside circle');
     expect(results.length).toBeGreaterThan(0);
     expect(results[0]?.category).toBe('Status');
     expect(results[0]?.score).toBeGreaterThan(0);
   });
 
   it('uses category as a semantic signal', () => {
-    const results = searchByDescription(sampleIcons, 'arrows', 24);
+    const results = searchByDescription(sampleIcons, 'arrows');
     expect(results.some((item) => item.category === 'Arrows')).toBe(true);
   });
 
-  it('shares description across sizes for the same logical icon', () => {
-    const results16 = searchByDescription(sampleIcons, 'heart inside circle', 16);
-    const results24 = searchByDescription(sampleIcons, 'heart inside circle', 24);
-    expect(results16[0]?.description).toBe(results24[0]?.description);
-    expect(results16[0]?.size).toBe(16);
-    expect(results24[0]?.size).toBe(24);
+  it('shows available sizes instead of requiring size input', () => {
+    const results = searchByDescription(sampleIcons, 'heart inside circle');
+    expect(results[0]?.description).toBe('Heart icon inside a circle');
+    expect(results[0]?.size).toBe(24);
+    expect(results[0]?.sizesAvailable).toEqual([16, 24, 36]);
   });
 });

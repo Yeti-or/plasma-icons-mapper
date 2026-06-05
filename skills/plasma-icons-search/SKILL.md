@@ -29,7 +29,7 @@ description: >-
 
 - User needs an icon by description ("download arrow", "attention in a circle")
 - User mentions a PascalCase icon name (`ArrowBarDown`, `AttentionCircleFill`)
-- User needs an SVG URL or available sizes
+- User needs an SVG URL, preview page, or available sizes
 
 Use **HTTP API calls** only. Do not guess icon names. Do not use browser automation.
 
@@ -37,11 +37,11 @@ Use **HTTP API calls** only. Do not guess icon names. Do not use browser automat
 
 | Input | Endpoint |
 |-------|----------|
-| Icon name or partial name | `GET /api/search?name={query}&size=24` |
-| Visual / semantic description | `GET /api/search?description={query}&size=24` |
+| Icon name or partial name | `GET /api/search?name={query}` |
+| Visual / semantic description | `GET /api/search?description={query}` |
 | SVG after search | `GET /api/icons/{id}/svg` |
 
-**Default size is `24`.** Use `size=16` or `size=36` only when required.
+Search does not take a size parameter. Results include `sizesAvailable`; use the returned `id` for a default preview SVG, or replace the size prefix in `id` with one of `sizesAvailable` when the user needs a specific size.
 
 ## Workflow
 
@@ -51,15 +51,16 @@ Use **HTTP API calls** only. Do not guess icon names. Do not use browser automat
 4. **Return** to user:
    - `name`, `category`, `variant`
    - `id` — e.g. `24/Status/AttentionCircleFill`
+   - Preview page — use `previewUrl` from the result
    - SVG URL — `http://81.26.181.62/api/icons/{id}/svg`
    - `sizesAvailable`
 
 ## API examples
 
 ```http
-GET http://81.26.181.62/api/search?name=ArrowBarDown&size=24
-GET http://81.26.181.62/api/search?description=download+arrow&size=24
-GET http://81.26.181.62/api/search?description=exclamation+inside+circle&size=24
+GET http://81.26.181.62/api/search?name=ArrowBarDown
+GET http://81.26.181.62/api/search?description=arrow+bar+down
+GET http://81.26.181.62/api/search?description=exclamation+inside+circle
 GET http://81.26.181.62/api/icons/24/Arrows/ArrowBarDown/svg
 GET http://81.26.181.62/api/icons/24/Status/AttentionCircleFill/svg
 GET http://81.26.181.62/api/icons?category=Arrows&size=24&q=arrow
@@ -70,9 +71,8 @@ GET http://81.26.181.62/api/health
 
 ```json
 {
-  "query": "download arrow",
+  "query": "arrow bar down",
   "mode": "description",
-  "size": 24,
   "results": [
     {
       "id": "24/Arrows/ArrowBarDown",
@@ -80,13 +80,17 @@ GET http://81.26.181.62/api/health
       "category": "Arrows",
       "variant": null,
       "sizesAvailable": [16, 24, 36],
-      "score": 0.9
+      "score": 0.9,
+      "svgUrl": "http://81.26.181.62/api/icons/24/Arrows/ArrowBarDown/svg",
+      "previewUrl": "http://81.26.181.62/?description=arrow+bar+down&selected=24%2FArrows%2FArrowBarDown"
     }
   ]
 }
 ```
 
 - `id` = `{size}/{Category}/{Name}` — use for SVG fetch
+- `previewUrl` = main UI page with the search already opened and this icon selected
+- `svgUrl` = raw SVG endpoint
 - `score` = 0–1, higher is better
 - If description search fails, retry **name search**
 
@@ -105,14 +109,15 @@ GET http://81.26.181.62/api/health
 
 ## Full example
 
-**User:** "Download arrow icon, size 24"
+**User:** "Arrow bar down icon"
 
 ```http
-GET http://81.26.181.62/api/search?description=download+arrow&size=24
+GET http://81.26.181.62/api/search?description=arrow+bar+down
 ```
 
 **Answer:**
 - Name: `ArrowBarDown`
 - Category: `Arrows`
+- Preview: http://81.26.181.62/?description=arrow+bar+down&selected=24%2FArrows%2FArrowBarDown
 - SVG: http://81.26.181.62/api/icons/24/Arrows/ArrowBarDown/svg
 - Sizes: 16, 24, 36

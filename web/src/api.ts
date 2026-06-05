@@ -13,10 +13,9 @@ import type { GenerationLog, IconSize } from '@plasma-icons-mapper/shared';
 export async function searchIcons(params: {
   mode: 'name' | 'description';
   query: string;
-  size: IconSize;
 }): Promise<SearchResponse> {
   const searchParam = params.mode === 'name' ? 'name' : 'description';
-  const url = `/api/search?${searchParam}=${encodeURIComponent(params.query)}&size=${params.size}`;
+  const url = `/api/search?${searchParam}=${encodeURIComponent(params.query)}`;
   const response = await fetch(url);
   if (!response.ok) throw new Error('Search failed');
   return response.json();

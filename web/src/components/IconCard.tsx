@@ -17,6 +17,7 @@ export function IconCard({ icon, selected, showScore, onClick }: IconCardProps) 
       <div className="icon-meta">
         <strong>{icon.name}</strong>
         <div>{icon.category}</div>
+        <div className="muted">Sizes: {icon.sizesAvailable.join(', ')}</div>
         {icon.variant && <div className="muted">{icon.variant}</div>}
         {showScore && <div className="score">Score: {icon.score}</div>}
       </div>
