@@ -158,6 +158,10 @@ function getRepresentativeIcons(icons: IconRecord[]): IconRecord[] {
     .filter((icon): icon is IconRecord => Boolean(icon));
 }
 
+function getDescriptionSearchThreshold(query: string): number {
+  return tokenizeQuery(query).length > 1 ? 0.5 : 0.2;
+}
+
 export function searchByName(icons: IconRecord[], query: string): SearchResultItem[] {
   return getRepresentativeIcons(icons)
     .map((icon) => ({ icon, score: scoreNameMatch(icon, query) }))
@@ -167,9 +171,11 @@ export function searchByName(icons: IconRecord[], query: string): SearchResultIt
 }
 
 export function searchByDescription(icons: IconRecord[], query: string): SearchResultItem[] {
+  const threshold = getDescriptionSearchThreshold(query);
+
   return getRepresentativeIcons(icons)
     .map((icon) => ({ icon, score: scoreDescriptionMatch(icon, query) }))
-    .filter(({ score }) => score > 0.15)
+    .filter(({ score }) => score > threshold)
     .sort((a, b) => b.score - a.score || a.icon.name.localeCompare(b.icon.name))
     .map(({ icon, score }) => toSearchResult(icon, Number(score.toFixed(4))));
 }

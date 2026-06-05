@@ -276,4 +276,62 @@ describe('search', () => {
     expect(heart?.score).toBeGreaterThan(0.8);
     expect(likeFill?.score).toBeGreaterThan(heart?.score ?? 0);
   });
+
+  it('filters partial multi-word matches below the raised threshold', () => {
+    const heartIcons: IconRecord[] = [
+      {
+        id: '24/Toggle/HeartOutline',
+        logicalId: 'Toggle/HeartOutline',
+        size: 24,
+        category: 'Toggle',
+        name: 'HeartOutline',
+        variant: 'Outline',
+        relativePath: 'Icons/24/Toggle/HeartOutline.svg',
+        svgHash: 'hash-heart-outline',
+        tokens: ['heart', 'outline', 'toggle'],
+        sizesAvailable: [16, 24, 36],
+        description: "An outline of a heart shape, often used to indicate 'like' or 'favorite'.",
+        tags: ['heart', 'love', 'like', 'outline'],
+        generationStatus: 'generated',
+      },
+      {
+        id: '24/Toggle/HeartFill',
+        logicalId: 'Toggle/HeartFill',
+        size: 24,
+        category: 'Toggle',
+        name: 'HeartFill',
+        variant: 'Fill',
+        relativePath: 'Icons/24/Toggle/HeartFill.svg',
+        svgHash: 'hash-heart-fill',
+        tokens: ['heart', 'fill', 'toggle'],
+        sizesAvailable: [16, 24, 36],
+        description: "A heart shape, commonly used to indicate a favorite item or love.",
+        tags: ['heart', 'love', 'favorite'],
+        generationStatus: 'generated',
+      },
+      {
+        id: '24/Toggle/HeartCircleOutline',
+        logicalId: 'Toggle/HeartCircleOutline',
+        size: 24,
+        category: 'Toggle',
+        name: 'HeartCircleOutline',
+        variant: 'Outline',
+        relativePath: 'Icons/24/Toggle/HeartCircleOutline.svg',
+        svgHash: 'hash-heart-circle-outline',
+        tokens: ['heart', 'circle', 'outline', 'toggle'],
+        sizesAvailable: [16, 24, 36],
+        description: 'An outline of a circle enclosing a heart shape.',
+        tags: ['heart', 'circle', 'outline', 'favorite'],
+        generationStatus: 'generated',
+      },
+    ];
+
+    const results = searchByDescription(heartIcons, 'heart outline');
+    const names = results.map((item) => item.name);
+
+    expect(names).toContain('HeartOutline');
+    expect(names).toContain('HeartCircleOutline');
+    expect(names).not.toContain('HeartFill');
+    expect(results.every((item) => item.score > 0.5)).toBe(true);
+  });
 });
