@@ -4,7 +4,7 @@ TypeScript service and React UI for searching Plasma SVG icons by name or genera
 
 ## Features
 
-- Search icons by name (`?name=heartCircleFill`) or description (`?description=icon+inside+circle`)
+- Search icons by name (`?name=AttentionCircleFill`) or description (`?description=icon+inside+circle`)
 - Optional `size` query param, defaults to `24`
 - Search results include `category`
 - Filesystem-backed description storage generated via [OpenRouter](https://openrouter.ai)
@@ -28,6 +28,10 @@ npm run dev
 - API: http://localhost:3001
 - Web UI: http://localhost:5173
 
+## AI agent skill
+
+Share [`skills/plasma-icons-search/SKILL.md`](skills/plasma-icons-search/SKILL.md) with colleagues — upload it to a Claude Project knowledge.
+
 ## Scripts
 
 - `npm run dev` - start API and web UI
@@ -38,7 +42,7 @@ npm run dev
 
 ## API
 
-- `GET /api/search?name=heartCircleFill&size=24`
+- `GET /api/search?name=AttentionCircleFill&size=24`
 - `GET /api/search?description=icon+inside+circle&size=24`
 - `GET /api/icons`
 - `GET /api/icons/:id`

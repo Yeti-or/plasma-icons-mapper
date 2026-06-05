@@ -47,7 +47,7 @@ export function SearchPage() {
             onChange={(event) => setQuery(event.target.value)}
             placeholder={
               mode === 'name'
-                ? 'Search by icon name, e.g. heartCircleFill'
+                ? 'Search by icon name, e.g. ArrowBarDown'
                 : 'Search by description, e.g. icon inside circle'
             }
           />
