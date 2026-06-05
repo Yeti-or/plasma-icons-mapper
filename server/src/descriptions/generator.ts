@@ -223,7 +223,11 @@ export class DescriptionGenerator {
     return results;
   }
 
-  async updateManualDescription(iconId: string, descriptionText: string): Promise<LogicalIconRecord> {
+  async updateManualDescription(
+    iconId: string,
+    descriptionText: string,
+    tags?: string[],
+  ): Promise<LogicalIconRecord> {
     const logicalId = toLogicalIconId(iconId);
     const logicalIcon = this.indexer.getLogicalIcons().find((icon) => icon.logicalId === logicalId);
     if (!logicalIcon) {
@@ -244,7 +248,7 @@ export class DescriptionGenerator {
       id: logicalId,
       svgHash: representative.svgHash,
       description: descriptionText,
-      tags: previous?.tags ?? [],
+      tags: tags ?? previous?.tags ?? [],
       model: 'manual',
       generatedAt: new Date().toISOString(),
       sourceSize: representative.size,

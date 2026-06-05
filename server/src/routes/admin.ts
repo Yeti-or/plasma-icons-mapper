@@ -59,7 +59,10 @@ export async function registerAdminRoutes(
     }
 
     try {
-      const icon = await generator.updateManualDescription(body.iconId, description);
+      const tags = Array.isArray(body.tags)
+        ? body.tags.map((tag) => String(tag).trim().toLowerCase()).filter(Boolean)
+        : undefined;
+      const icon = await generator.updateManualDescription(body.iconId, description, tags);
       return { icon, status: generator.getStatusSummary() };
     } catch (error) {
       return reply.code(404).send({

@@ -82,6 +82,7 @@ export interface TestGenerateRequest {
 export interface ManualDescriptionUpdateRequest {
   iconId: string;
   description: string;
+  tags?: string[];
 }
 
 export interface TestGenerateResult {

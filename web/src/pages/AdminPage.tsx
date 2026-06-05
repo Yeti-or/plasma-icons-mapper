@@ -23,6 +23,17 @@ const STATUS_TOOLTIP = [
 const ICONS_PER_PAGE = 50;
 type StatusFilter = 'all' | 'missing' | 'stale' | 'generated';
 
+function formatTagsInput(tags: string[]): string {
+  return tags.join(', ');
+}
+
+function parseTagsInput(value: string): string[] {
+  return value
+    .split(',')
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean);
+}
+
 export function AdminPage() {
   const [status, setStatus] = useState<Awaited<ReturnType<typeof getGenerationStatus>> | null>(null);
   const [icons, setIcons] = useState<LogicalIconRecord[]>([]);
@@ -37,6 +48,9 @@ export function AdminPage() {
   const [editingDescriptionId, setEditingDescriptionId] = useState<string | null>(null);
   const [editingDescription, setEditingDescription] = useState('');
   const [savingDescriptionId, setSavingDescriptionId] = useState<string | null>(null);
+  const [editingTagsId, setEditingTagsId] = useState<string | null>(null);
+  const [editingTags, setEditingTags] = useState('');
+  const [savingTagsId, setSavingTagsId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('missing');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [nameFilter, setNameFilter] = useState('');
@@ -87,6 +101,10 @@ export function AdminPage() {
 
   function getDescriptionForIcon(icon: LogicalIconRecord): string | undefined {
     return icon.description ?? testResultsById[icon.logicalId]?.description;
+  }
+
+  function getTagsForIcon(icon: LogicalIconRecord): string[] {
+    return icon.tags ?? testResultsById[icon.logicalId]?.tags ?? [];
   }
 
   function toggleSelection(id: string) {
@@ -168,6 +186,7 @@ export function AdminPage() {
       const response = await updateIconDescription({
         iconId: icon.logicalId,
         description,
+        tags: getTagsForIcon(icon),
       });
       setIcons((current) =>
         current.map((item) =>
@@ -183,6 +202,51 @@ export function AdminPage() {
       setError(err instanceof Error ? err.message : 'Failed to update description');
     } finally {
       setSavingDescriptionId(null);
+    }
+  }
+
+  function startEditingTags(icon: LogicalIconRecord) {
+    setEditingTagsId(icon.logicalId);
+    setEditingTags(formatTagsInput(getTagsForIcon(icon)));
+    setError(null);
+    setMessage(null);
+  }
+
+  function cancelEditingTags() {
+    setEditingTagsId(null);
+    setEditingTags('');
+  }
+
+  async function handleSaveTags(icon: LogicalIconRecord) {
+    const description = getDescriptionForIcon(icon)?.trim();
+    if (!description) {
+      setError('Add a description before saving tags.');
+      return;
+    }
+
+    setSavingTagsId(icon.logicalId);
+    setError(null);
+    setMessage(null);
+    try {
+      const response = await updateIconDescription({
+        iconId: icon.logicalId,
+        description,
+        tags: parseTagsInput(editingTags),
+      });
+      setIcons((current) =>
+        current.map((item) =>
+          item.logicalId === response.icon.logicalId ? response.icon : item,
+        ),
+      );
+      setStatus(response.status);
+      setTestResults((current) => current.filter((result) => result.id !== icon.logicalId));
+      setEditingTagsId(null);
+      setEditingTags('');
+      setMessage('Tags updated.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update tags');
+    } finally {
+      setSavingTagsId(null);
     }
   }
 
@@ -309,11 +373,17 @@ export function AdminPage() {
                   Status
                 </span>
               </th>
+              <th>Tags</th>
               <th>Description</th>
             </tr>
           </thead>
           <tbody>
-            {pageIcons.map((icon) => (
+            {pageIcons.map((icon) => {
+              const tags = getTagsForIcon(icon);
+              const description = getDescriptionForIcon(icon);
+              const testPreview = testResultsById[icon.logicalId];
+
+              return (
               <tr key={icon.logicalId}>
                 <td>
                   <input
@@ -329,6 +399,59 @@ export function AdminPage() {
                 <td>{icon.category}</td>
                 <td className="muted">{formatSizes(icon.sizesAvailable)}</td>
                 <td>{icon.generationStatus}</td>
+                <td className="tags-cell">
+                  {editingTagsId === icon.logicalId ? (
+                    <div className="description-editor">
+                      <input
+                        value={editingTags}
+                        onChange={(event) => setEditingTags(event.target.value)}
+                        placeholder="comma, separated, tags"
+                        aria-label={`Edit tags for ${icon.name}`}
+                      />
+                      <div className="description-actions">
+                        <button
+                          type="button"
+                          onClick={() => handleSaveTags(icon)}
+                          disabled={savingTagsId === icon.logicalId}
+                        >
+                          {savingTagsId === icon.logicalId ? 'Saving...' : 'Save'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={cancelEditingTags}
+                          disabled={savingTagsId === icon.logicalId}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : tags.length > 0 ? (
+                    <>
+                      {testPreview && !icon.tags?.length && (
+                        <span className="preview-badge">preview</span>
+                      )}
+                      {tags.join(', ')}
+                      <button
+                        type="button"
+                        className="inline-action"
+                        onClick={() => startEditingTags(icon)}
+                      >
+                        Edit
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="muted">—</span>
+                      <button
+                        type="button"
+                        className="inline-action"
+                        onClick={() => startEditingTags(icon)}
+                      >
+                        Add
+                      </button>
+                    </>
+                  )}
+                </td>
                 <td className="description-cell">
                   {editingDescriptionId === icon.logicalId ? (
                     <div className="description-editor">
@@ -355,12 +478,12 @@ export function AdminPage() {
                         </button>
                       </div>
                     </div>
-                  ) : getDescriptionForIcon(icon) ? (
+                  ) : description ? (
                     <>
-                      {testResultsById[icon.logicalId] && !icon.description && (
+                      {testPreview && !icon.description && (
                         <span className="preview-badge">preview</span>
                       )}
-                      {getDescriptionForIcon(icon)}
+                      {description}
                       <button
                         type="button"
                         className="inline-action"
@@ -383,10 +506,11 @@ export function AdminPage() {
                   )}
                 </td>
               </tr>
-            ))}
+            );
+            })}
             {!pageIcons.length && (
               <tr>
-                <td colSpan={7} className="muted">
+                <td colSpan={8} className="muted">
                   No icons match the current filters.
                 </td>
               </tr>
